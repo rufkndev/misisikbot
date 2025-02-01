@@ -136,7 +136,6 @@ def get_task_details(message):
 От: @{message.from_user.username}
 ID пользователя: {message.from_user.id}
 
-Предмет: {message.text}
 Детали задания:
 {message.text}"""
     
@@ -163,7 +162,7 @@ ID пользователя: {message.from_user.id}
 def handle_support(message):
     """
     Обработчик сообщений технической поддержки
-    Принимает вопросы пользователей и отправляет подтверждение
+    Принимает вопросы пользователей, отправляет их администратору и подтверждение пользователю
     """
     # Проверка на команды
     if message.text and message.text.startswith('/'):
@@ -173,13 +172,25 @@ def handle_support(message):
             return new_task(message)
         return
         
-    # Создание стандартной клавиатуры
+    # Формирование сообщения для администратора с информацией о пользователе
+    admin_text = f"""Обращение в техническую поддержку
+От: @{message.from_user.username}
+ID пользователя: {message.from_user.id}
+
+Текст обращения:
+{message.text}"""
+    
+    # Отправка обращения администратору
+    bot.send_message(ADMIN_CHAT_ID, admin_text)
+    
+    # Создание стандартной клавиатуры для пользователя
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row(
         types.KeyboardButton('Новое задание'),
         types.KeyboardButton('Поддержка')
     )
     
+    # Отправка подтверждения пользователю
     bot.reply_to(message, 
                  "Спасибо за обращение!\n"
                  "Я рассмотрю ваш вопрос и отвечу в ближайшее время.",
@@ -227,8 +238,8 @@ SOL: 11111111111111111111111111111111"""
     elif action == "paid":
         # Подтверждение получения оплаты
         bot.send_message(user_id, 
-                        "Оплата получена! Ваша работа взята в работу.\n"
-                        "Срок выполнения: 24 часа.")
+                        "Оплата получена! Ваше задание взято в работу.\n"
+                        "Срок выполнения: 24 часа с момента подтверждения оплаты.")
         bot.answer_callback_query(call.id, "Уведомление об успешной оплате отправлено")
         
     elif action == "complete":
