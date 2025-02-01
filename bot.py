@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 bot = telebot.TeleBot('7582178055:AAGRAXRJQeLDgIiSF_B7Ui0hm596HhXnuNM')
 
 # ID чата администратора для получения заявок
-ADMIN_CHAT_ID = "YOUR_ADMIN_CHAT_ID"
+ADMIN_CHAT_ID = "814032949"
 
 #-------------------- НАСТРОЙКА КОМАНД БОТА --------------------#
 
