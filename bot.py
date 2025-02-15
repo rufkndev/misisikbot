@@ -32,13 +32,13 @@ def set_commands():
 def send_welcome(message):
     """
     Обработчик команды /start
-    Отправляет приветственное сообщение и показывает главное меню с предметами
+    Отправляет приветственное сообщение и показывает меню выбора семестра
     """
-    # Создание клавиатуры с предметами
+    # Создание клавиатуры с выбором семестра
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = [
-        ['ДПП', 'Базы Данных'],
-        ['Архитектурное Моделирование'],
+        ['2 семестр', '3 семестр'],
+        ['4 семестр'],
         ['Кастомная работа']
     ]
     for row in buttons:
@@ -48,16 +48,41 @@ def send_welcome(message):
     
 Я бот-помощник для студентов ББИ. 
 
-Я могу помочь с выполнением практических и лабораторных работ по следующим предметам:
-- ДПП
-- Базы Данных
-- Архитектурное Моделирование
-Если необходимого предмета нет в списке:
-- Кастомная работа
-
-Выберите предмет, по которому нужно выполнить работу:"""
+Выберите семестр для просмотра доступных предметов:"""
     
     bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
+
+# Добавим новую функцию для обработки выбора семестра
+def show_semester_subjects(message, semester):
+    """
+    Показывает предметы для выбранного семестра
+    """
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    
+    # Словарь предметов по семестрам
+    semester_subjects = {
+        '2 семестр': [
+            ['Теория Систем', 'Проф Инструментарий'],
+            ['ООП'],
+            ['Назад']
+        ],
+        '3 семестр': [
+            ['ДПП', 'Базы Данных'],
+            ['Архитектурное Моделирование'],
+            ['Назад']
+        ],
+        '4 семестр': [
+            ['Моделирование БП', 'Процессное Управление'],
+            ['Цифровая Экономика', 'Статистические Методы'],
+            ['Назад']
+        ]
+    }
+    
+    buttons = semester_subjects.get(semester, [['Назад']])
+    for row in buttons:
+        markup.row(*[types.KeyboardButton(btn) for btn in row])
+    
+    bot.send_message(message.chat.id, f"Выберите предмет {semester}а:", reply_markup=markup)
 
 #-------------------- ОБРАБОТКА ВЫБОРА ПРЕДМЕТА --------------------#
 
@@ -65,7 +90,7 @@ def send_welcome(message):
 def handle_subject_selection(message):
     """
     Обработчик текстовых сообщений
-    Обрабатывает выбор предмета и перенаправляет на соответствующие действия
+    Обрабатывает выбор семестра, предмета и перенаправляет на соответствующие действия
     """
     try:
         # Игнорируем команды
@@ -77,10 +102,25 @@ def handle_subject_selection(message):
             return new_task(message)
         elif message.text == 'Поддержка':
             return support(message)
+        elif message.text == 'Назад':
+            return send_welcome(message)
+        
+        # Обработка выбора семестра
+        semesters = ['2 семестр', '3 семестр', '4 семестр']
+        if message.text in semesters:
+            return show_semester_subjects(message, message.text)
+        
+        # Все возможные предметы
+        all_subjects = [
+            'Теория Систем', 'Проф Инструментарий', 'ООП',
+            'ДПП', 'Базы Данных', 'Архитектурное Моделирование',
+            'Моделирование БП', 'Процессное Управление',
+            'Цифровая Экономика', 'Статистические Методы',
+            'Кастомная работа'
+        ]
         
         # Обработка выбора предмета
-        valid_subjects = ['ДПП', 'Базы Данных', 'Архитектурное Моделирование', 'Кастомная работа']
-        if message.text in valid_subjects:
+        if message.text in all_subjects:
             # Убираем клавиатуру и запрашиваем детали задания
             markup = types.ReplyKeyboardRemove()
             instruction_text = f"""Вы выбрали предмет: {message.text}
@@ -88,9 +128,9 @@ def handle_subject_selection(message):
 Пожалуйста, опишите задание подробно:
 - Полное название задания
 - Ссылка на задание на Moodle
-- ФИО, академическая группа, номер студенческого билета
+- ФИО
 - Сроки выполнения
-- Дополнительные требования"""
+- Дополнительные требования(вариант/пожелания/другое)"""
             
             bot.send_message(message.chat.id, instruction_text, reply_markup=markup)
             bot.register_next_step_handler(message, get_task_details)
@@ -229,9 +269,9 @@ def handle_callback(call):
 
 Для оплаты работы (1000 рублей) используйте следующие реквизиты:
 Банковская карта:
-ТБанк: 2200 7001 5074 4760
+ТБанк: +7 962 120 63 60 
 
-Криптовалюта(1000 рублей в TON/Solana/USDT по курсу на дату оплаты):
+Криптовалюта(1000 рублей по курсу на дату оплаты):
 TON: UQAVI-sMvoveW4sh85w1vuaVOB6wbyh08pGG1Vjri7gemMWK
 SOL: 3Y7JCgSMVhDNQDAf73gYe8voXfZmqne2NPAKqXV9MhiK"""
         
